@@ -45,6 +45,32 @@ export default new class UserManager extends Manager {
     return await this.getUserById(result.id);
   }
 
+  async updateUser(id: number, user: {firstName?: string, lastName?: string, email?: string, location?: string, dates?: { date: Date, type: UserDateTypeEnum }[] | undefined}) {
+    await this.prisma.$transaction(async (prisma) => {
+      const userJson = { ...user, dates: undefined }
+      await prisma.user.update({
+        where: { id: id },
+        data: userJson
+      });
+      if(user.dates && user.dates.length > 0) {
+        for(const userDate of user.dates) {
+          await prisma.userDate.deleteMany({
+            where: {
+              userId: id,
+            }
+          })
+          await prisma.userDate.create({data: {
+            userId: id,
+            dateType: Number(userDate.type.toString()),
+            date: userDate.date,
+          }});
+        }
+      }
+    });
+
+    return await this.getUserById(id);
+  }
+
   async deleteUser(id: number) {
     const user = await this.prisma.user.findFirst({where: {id}});
     if(!user) {
@@ -116,7 +142,7 @@ export default new class UserManager extends Manager {
     }    
   }
 
-  async sendBirthdayMessages(hour: number, minute: number) {
+  async addUsersBirthdayMessageToQueue(hour: number, minute: number) {
     const users = await this.getUserToSendBirthdayMessages(hour, minute);
     for(const user of users) {
       const message = `Hey, ${user.firstName} ${user.lastName} it's your birthday`;
