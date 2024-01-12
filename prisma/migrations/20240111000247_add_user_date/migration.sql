@@ -1,0 +1,8 @@
+-- CreateTable
+CREATE TABLE "UserDate" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "userId" INTEGER NOT NULL,
+    "date" DATETIME NOT NULL,
+    "dateType" TEXT NOT NULL,
+    CONSTRAINT "UserDate_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
